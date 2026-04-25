@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIR Team Org Chart</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f9;--white:#fff;--border:#e1e8f0;--border2:#c8d5e6;
+  --text:#1a2535;--text2:#4a5568;--text3:#8a9bb0;
+  --air:#1d4ed8;--airlt:#eff6ff;
+  --res:#b45309;--reslt:#fffbeb;
+  --tea:#047857;--tealt:#ecfdf5;
+  --nt:#6d28d9;--ntlt:#f5f3ff;
+  --conn:#c8d5e6;
+  --leader-bg:#1a0533;
+  --hod-bg:#0f172a;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+
+/* NAV */
+header{height:52px;background:var(--leader-bg);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:fixed;top:0;left:0;right:0;z-index:100}
+.logo{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#fff;letter-spacing:2px}
+.logo em{color:#a78bfa;font-style:normal}
+.stats{display:flex;gap:6px}
+.sp{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:2px 9px;font-size:10px;color:rgba(255,255,255,.45)}
+.sp b{color:#fff;font-weight:600}
+.sd{width:5px;height:5px;border-radius:50%}
+
+/* TOOLBAR */
+.tb{height:44px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:8px;position:fixed;top:52px;left:0;right:0;z-index:99}
+.sb{position:relative}
+.sb input{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 10px 5px 28px;border-radius:6px;font-size:12px;width:190px;outline:none;font-family:inherit;transition:border-color .2s}
+.sb input:focus{border-color:var(--air);background:#fff}
+.sb svg{position:absolute;left:8px;top:50%;transform:translateY(-50%);opacity:.35;pointer-events:none}
+.dr{position:absolute;top:34px;left:0;width:260px;background:#fff;border:1px solid var(--border);border-radius:8px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.12);display:none}
+.dr.on{display:block}
+.di{padding:7px 12px;cursor:pointer;border-bottom:1px solid var(--border)}
+.di:last-child{border-bottom:none}
+.di:hover{background:var(--bg)}
+.di strong{display:block;font-size:12px;font-weight:600}
+.di span{color:var(--text3);font-size:10px}
+.sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.btn{padding:4px 11px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.btn:hover{background:var(--airlt);border-color:#93c5fd;color:var(--air)}
+.btn.aa{background:var(--leader-bg);border-color:var(--leader-bg);color:#fff}
+.btn.ab{background:var(--airlt);border-color:#93c5fd;color:var(--air);font-weight:700}
+.btn.ac{background:var(--reslt);border-color:#fcd34d;color:var(--res);font-weight:700}
+.btn.ad{background:var(--tealt);border-color:#6ee7b7;color:var(--tea);font-weight:700}
+.btn.ae{background:var(--ntlt);border-color:#c4b5fd;color:var(--nt);font-weight:700}
+.hint{font-size:10px;color:var(--text3);margin-left:auto;flex-shrink:0}
+
+/* CANVAS */
+.cv{position:fixed;top:96px;left:0;right:0;bottom:0;overflow:auto;cursor:grab}
+.cv.pan{cursor:grabbing}
+.wrap{padding:48px 56px 120px;display:inline-flex;flex-direction:row;gap:56px;align-items:flex-start;min-height:100%}
+
+/* TREE */
+.tree{display:flex;flex-direction:column;align-items:center}
+.kids{display:flex;flex-direction:row;align-items:flex-start;position:relative}
+.kid{display:flex;flex-direction:column;align-items:center;padding:0 6px}
+.vdown{width:2px;background:var(--conn)}
+.vstub{width:2px;background:var(--conn)}
+
+/* BASE CARD */
+.card{border-radius:10px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;position:relative;transition:box-shadow .15s,transform .13s;user-select:none}
+.card:hover{box-shadow:0 4px 18px rgba(0,0,0,.11);transform:translateY(-2px)}
+.card .nm{font-size:12px;font-weight:700;color:var(--text);line-height:1.3}
+.card .dg{font-size:9px;color:var(--text3);margin-top:1px}
+.card .cid{font-family:'Space Mono',monospace;font-size:7px;color:var(--text3);margin-top:2px}
+.card .tags{display:flex;gap:3px;margin-top:5px;flex-wrap:wrap}
+.tag{font-size:7px;font-weight:700;padding:1px 5px;border-radius:3px}
+.t-air{background:var(--airlt);color:var(--air)}
+.t-res{background:var(--reslt);color:var(--res)}
+.t-tea{background:var(--tealt);color:var(--tea)}
+.t-nt{background:var(--ntlt);color:var(--nt)}
+
+/* LEADER CARD */
+.card.leader{
+  width:182px;padding:13px 14px 11px;
+  background:linear-gradient(145deg,#1a0533 0%,#2e1065 100%);
+  border-color:transparent;border-left:3px solid #7c3aed;
+  cursor:default
+}
+.card.leader:hover{transform:none;box-shadow:none}
+.card.leader .lv,.card.hod .lv{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.card.leader .lv{color:rgba(255,255,255,.35)}
+.card.leader .nm{font-size:13px!important;font-weight:800!important;color:#fff!important;white-space:normal!important;overflow:visible!important;line-height:1.25!important;margin-bottom:2px}
+.card.leader .cid{color:rgba(255,255,255,.28)!important;margin-bottom:0}
+.card.leader .tot{font-size:9px;color:rgba(255,255,255,.28);margin-top:5px}
+
+/* HOD CARD */
+.card.hod{
+  width:178px;padding:12px 14px 10px;
+  background:linear-gradient(145deg,#0f172a 0%,#1e3a5f 100%);
+  border-color:transparent;border-left:3px solid #3b82f6
+}
+.card.hod .lv{color:rgba(255,255,255,.3)}
+.card.hod .nm{font-size:13px!important;font-weight:800!important;color:#fff!important;white-space:normal!important;overflow:visible!important;line-height:1.25!important;margin-bottom:2px}
+.card.hod .dg{color:rgba(255,255,255,.45)!important;font-size:9px}
+.card.hod .cid{color:rgba(255,255,255,.28)!important}
+.card.hod .tot{font-size:9px;color:rgba(255,255,255,.28);margin-top:4px}
+
+/* PERSON CARD */
+.card.p{width:162px;padding:9px 11px 8px}
+.card.p.air-t{border-top:3px solid var(--air)}
+.card.p.air-n{border-top:3px solid #818cf8}
+.card.p.res-t{border-top:3px solid var(--res)}
+.card.p.res-n{border-top:3px solid #a855f7}
+
+/* TOGGLE BADGE */
+.tog{
+  position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);
+  color:#fff;font-size:8px;font-weight:800;
+  padding:3px 10px;border-radius:12px;cursor:pointer;z-index:10;
+  font-family:'Space Mono',monospace;
+  border:none;white-space:nowrap;transition:all .15s;
+  background:#334155;
+  box-shadow:0 2px 6px rgba(0,0,0,.25);
+  letter-spacing:.3px;
+}
+.tog:hover{background:#1e293b;transform:translateX(-50%) scale(1.05)}
+.tog.open{background:#2563eb}
+.card.leader .tog{background:#6d28d9}
+.card.leader .tog.open{background:#7c3aed}
+.card.leader .tog:hover{background:#5b21b6}
+.card.hod .tog{background:#1e40af}
+.card.hod .tog.open{background:#2563eb}
+.card.hod .tog:hover{background:#1e3a8a}
+.card.hl{outline:2.5px solid #f59e0b;outline-offset:2px}
+
+/* PANEL */
+.pnl{position:fixed;right:16px;top:64px;width:278px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px;z-index:150;box-shadow:0 8px 28px rgba(0,0,0,.13);transform:translateX(300px);transition:transform .27s cubic-bezier(.16,1,.3,1)}
+.pnl.on{transform:translateX(0)}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px}
+.pid{font-family:'Space Mono',monospace;font-size:8px;color:var(--text3);margin-bottom:2px}
+.pnm{font-size:14px;font-weight:800;color:var(--text);line-height:1.2}
+.pcl{background:var(--bg);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:10px;border-radius:5px;padding:3px 9px;font-family:inherit}
+.pcl:hover{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
+.pr{display:flex;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)}
+.pr:last-child{border-bottom:none}
+.pl{color:var(--text3);min-width:68px;flex-shrink:0;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;padding-top:1px}
+.pv{color:var(--text2);flex:1;line-height:1.4;font-size:11px}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Offline Central <em>ORG</em></div>
+  <div class="stats">
+    <div class="sp"><div class="sd" style="background:#60a5fa"></div>AIR <b id="c-air">-</b></div>
+    <div class="sp"><div class="sd" style="background:#fb923c"></div>Results <b id="c-res">-</b></div>
+    <div class="sp"><div class="sd" style="background:#34d399"></div>Teachers <b id="c-tea">-</b></div>
+    <div class="sp"><div class="sd" style="background:#a78bfa"></div>Non-Teacher <b id="c-nt">-</b></div>
+    <div class="sp">Total <b id="c-tot">-</b></div>
+  </div>
+</header>
+
+<div class="tb">
+  <div class="sb">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="srch" placeholder="Search name or ID...">
+    <div class="dr" id="dr"></div>
+  </div>
+  <div class="sep"></div>
+  <button class="btn aa" id="f-all" onclick="sf('all')">All</button>
+  <button class="btn" id="f-air" onclick="sf('AIR')">AIR</button>
+  <button class="btn" id="f-res" onclick="sf('Results')">Results</button>
+  <div class="sep"></div>
+  <button class="btn" id="f-tea" onclick="sf('Teacher')">Teachers</button>
+  <button class="btn" id="f-nt"  onclick="sf('NonTeacher')">Non-Teacher</button>
+  <div class="sep"></div>
+  <button class="btn" onclick="xAll(true)">Expand All</button>
+  <button class="btn" onclick="xAll(false)">Collapse All</button>
+  <span class="hint">Drag canvas to pan &nbsp;·&nbsp; Click any card for details</span>
+</div>
+
+<div class="cv" id="cv">
+  <div class="wrap" id="wrap"></div>
+</div>
+
+<div class="pnl" id="pnl">
+  <div class="ph">
+    <div><div class="pid" id="p-id"></div><div class="pnm" id="p-nm"></div></div>
+    <button class="pcl" onclick="closeP()">Close</button>
+  </div>
+  <div class="pr"><div class="pl">Designation</div><div class="pv" id="p-dg"></div></div>
+  <div class="pr"><div class="pl">Department</div><div class="pv" id="p-dp"></div></div>
+  <div class="pr"><div class="pl">Category</div><div class="pv" id="p-ct"></div></div>
+  <div class="pr"><div class="pl">Type</div><div class="pv" id="p-ty"></div></div>
+  <div class="pr"><div class="pl">Location</div><div class="pv" id="p-lc"></div></div>
+  <div class="pr"><div class="pl">Joined</div><div class="pv" id="p-dj"></div></div>
+  <div class="pr"><div class="pl">HOD</div><div class="pv" id="p-hd"></div></div>
+  <div class="pr"><div class="pl">Leader</div><div class="pv" id="p-ld"></div></div>
+</div>
+
+<script>
+var DATA={"trees": [{"id": "PW0032", "name": "Pankaj Sijariya", "designation": "Leader", "category": "", "type": "", "dept": "", "loc": "", "doj": "", "hod_name": "", "leader_name": "Pankaj Sijariya", "is_leader": true, "external": true, "children": [{"id": "PW3461", "name": "Bhoopendra Chauhan", "designation": "HOD", "category": "", "type": "", "dept": "", "loc": "", "doj": "", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "is_hod": true, "external": true, "children": [{"id": "PW6286", "name": "Aamir Ansari", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "10/28/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW12924", "name": "Aman Singh", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "Corporate – Noida – (WFH) – UP", "doj": "7/10/2023", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW3443", "name": "Anand Yadav", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "7/13/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW6892", "name": "Arpit Bharadwaj", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "12/1/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW21064", "name": "Aseem Kumar", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "11/14/2024", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW3119", "name": "Bal Meghwanshi", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "Studio – Kota – RJ", "doj": "7/6/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW4256", "name": "Devendra Sharma", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "8/8/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW13795", "name": "Dhiraj Dvivedi", "designation": "Senior Manager", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "9/8/2023", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": [{"id": "PW28945", "name": "Alina Ali", "designation": "Senior Associate", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "8/21/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW27758", "name": "Ashutosh Kumar Sharma", "designation": "Manager", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "7/3/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW6588", "name": "Chandra Varsa Rani", "designation": "Associate Manager", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "11/14/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW21453", "name": "Kuldeep Dwivedi", "designation": "Associate", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "12/2/2024", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW13481", "name": "Kumar Ankit", "designation": "Associate Manager", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "8/18/2023", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW16191", "name": "Pankaj Kumar Choudhary", "designation": "Associate", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "2/19/2024", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW25869", "name": "Priya Kumari", "designation": "Associate", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "5/1/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW5524", "name": "Rumita Kumari", "designation": "Senior Associate", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "9/12/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW29342", "name": "Yashika Chawla", "designation": "Senior Associate", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "9/11/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}]}, {"id": "PW27931", "name": "Gopal Chaturvedi", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "Studio – Kota – RJ", "doj": "7/11/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW1620", "name": "Gyan Prakash Dwivedi", "designation": "Senior Manager", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "1/17/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": [{"id": "PW30744", "name": "Ayush Vashisth", "designation": "Manager", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "11/27/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW24917", "name": "Faisal Khan", "designation": "Associate", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "4/7/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW12180", "name": "Neha Singh", "designation": "Associate Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "5/18/2023", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW3068", "name": "Rahul Bodwal", "designation": "Manager", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "7/5/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW12980", "name": "Ramendra Kumar", "designation": "Senior Associate", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "7/17/2023", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW22619", "name": "Shrishti Kohli", "designation": "Senior Associate", "category": "AIR", "type": "Non Teacher", "dept": "Academics Operations Online AIR", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "1/27/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}]}, {"id": "PW22212", "name": "Kamal Sharma", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "1/13/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW24074", "name": "Keshav Kumar", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "3/20/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW7646", "name": "Manoj Sharma", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "Studio – Kota – RJ", "doj": "12/1/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW22521", "name": "Neha Soni", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "1/23/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW13754", "name": "Nitin Kumar", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "9/4/2023", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW25331", "name": "Prakash Chandra Pandey", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "4/17/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW4145", "name": "Prakash Gupta", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "Studio – Kota – RJ", "doj": "8/1/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW6144", "name": "RAJKUMAR SHARMA", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "Corporate – Noida – (WFH) – UP", "doj": "9/27/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW4547", "name": "Sanjay Yadav", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "Studio – Kota – RJ", "doj": "8/19/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW21564", "name": "Saurav Goswami", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "12/9/2024", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW6072", "name": "Shailesh Tiwari", "designation": "General Manager", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "10/15/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": [{"id": "PW14230", "name": "Pankaj Sharma", "designation": "Senior Associate", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "9/26/2023", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": [{"id": "PW29222", "name": "Praveen Sharma", "designation": "Associate", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "9/4/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW24995", "name": "Sonu Ram Chawla", "designation": "Associate", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "4/10/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}]}, {"id": "PW24369", "name": "Rajesh Parashar", "designation": "Senior Associate", "category": "AIR", "type": "Non Teacher", "dept": "Business Operations Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "3/27/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}]}, {"id": "PW18331", "name": "Sushant Shukla", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "6/3/2024", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW5088", "name": "Vijay Sharma", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "8/16/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW18921", "name": "Vikram Singh", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "7/4/2024", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW23951", "name": "Vishal Sharma", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "3/17/2025", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}, {"id": "PW7201", "name": "Yudhvir Singh Parmar", "designation": "Professor", "category": "AIR", "type": "Teacher", "dept": "Academics Online AIR", "loc": "COE Offline Greater Noida – UP", "doj": "12/15/2022", "hod_name": "Bhoopendra Chauhan", "leader_name": "Pankaj Sijariya", "children": []}]}]}, {"id": "PW1071", "name": "Debabrata Das", "designation": "Leader", "category": "", "type": "", "dept": "", "loc": "", "doj": "", "hod_name": "", "leader_name": "Debabrata Das", "is_leader": true, "external": true, "children": [{"id": "PW1071", "name": "Debabrata Das", "designation": "HOD", "category": "", "type": "", "dept": "", "loc": "", "doj": "", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "is_hod": true, "external": true, "children": [{"id": "PW2913", "name": "Balram Gautam", "designation": "Senior Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "6/23/2022", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": [{"id": "PW13303", "name": "Abhinav KISHORE Jha", "designation": "Senior Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – Exhibition Road – Patna – BR", "doj": "8/9/2023", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": [{"id": "PW10891", "name": "Sammi Kumar Ray", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – Exhibition Road – Patna – BR", "doj": "4/10/2023", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}]}, {"id": "PW9733", "name": "Amit Kumar", "designation": "Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – Exhibition Road – Patna – BR", "doj": "3/17/2023", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": [{"id": "PW3552", "name": "Ashwani Singh", "designation": "Senior Associate", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – Exhibition Road – Patna – BR", "doj": "7/18/2022", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}]}, {"id": "PW9734", "name": "Asif Zeya", "designation": "Senior Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "3/17/2023", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}]}, {"id": "PW22743", "name": "Deepak Singh", "designation": "Associate Director", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "2/3/2025", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": [{"id": "PW28744", "name": "Karmjeet Singh", "designation": "Senior Associate", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "8/18/2025", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}, {"id": "PW6224", "name": "Renu  Yadav", "designation": "Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "10/18/2022", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": [{"id": "PW12088", "name": "Hadiya Hussain", "designation": "Associate Manager", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Corporate – Noida – (WFH) – UP", "doj": "5/15/2023", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}, {"id": "PW25995", "name": "Shriya Patyal", "designation": "Senior Associate", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "5/5/2025", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}]}, {"id": "PW9732", "name": "Shambhu Kumar Yadav", "designation": "Senior Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "3/16/2023", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": [{"id": "PW20866", "name": "Manpreet Singh", "designation": "Associate Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "11/11/2024", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}, {"id": "PW13394", "name": "Rahul Wadhwa", "designation": "Associate Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "8/16/2023", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}]}]}, {"id": "PW4210", "name": "Madhurima Baidya", "designation": "Manager", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "8/8/2022", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": [{"id": "PW6808", "name": "Ravi Kumar ", "designation": "Junior Associate", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Corporate – Noida – (WFH) – UP", "doj": "11/8/2022", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}, {"id": "PW18291", "name": "Zaid Rehman", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Business Operations Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "5/30/2024", "hod_name": "Debabrata Das", "leader_name": "Debabrata Das", "children": []}]}]}]}, {"id": "PW0031", "name": "Rohit Kumar Gupta", "designation": "Leader", "category": "", "type": "", "dept": "", "loc": "", "doj": "", "hod_name": "", "leader_name": "Rohit Kumar Gupta", "is_leader": true, "external": true, "children": [{"id": "PW27013", "name": "Pankaj Rastogi", "designation": "HOD", "category": "", "type": "", "dept": "", "loc": "", "doj": "", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "is_hod": true, "external": true, "children": [{"id": "PW17836", "name": "Ajay Kumar", "designation": "Senior Associate", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "5/2/2024", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW28407", "name": "Abishek Katwal", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "7/31/2025", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW3112", "name": "Dilip Madtwal", "designation": "Senior Associate", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Corporate – Noida – (WFH) – UP", "doj": "7/1/2022", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW4905", "name": "Deepak Kumar", "designation": "Manager", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – A – Noida – UP", "doj": "9/1/2022", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW10029", "name": "Dibakar Jha", "designation": "Senior Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – A – Noida – UP", "doj": "3/25/2023", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW27799", "name": "Ekta Yadav", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – A – Noida – UP", "doj": "7/7/2025", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW30562", "name": "Kapil Yadav", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – A – Noida – UP", "doj": "11/17/2025", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW1474", "name": "Vijay Kumar Srivastava", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "12/15/2021", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW8051", "name": "ABHISHEK PARASHAR", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "1/19/2023", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW18330", "name": "Alok Kumar Jha", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "6/3/2024", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW10614", "name": "Anjali Nagar", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "4/5/2023", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW24024", "name": "Ankita Kumari", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "3/20/2025", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW10207", "name": "Anuj Mamgain", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "4/1/2023", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW32133", "name": "Ashutosh Kumar", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "2/16/2026", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW9743", "name": "Deepak Kumar", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "3/15/2023", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW17159", "name": "Garima Sharma", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Corporate – Noida – (WFH) – UP", "doj": "4/1/2024", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW5103", "name": "Neeraj Mehra", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "9/12/2022", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW4398", "name": "Paras Duggal", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "8/16/2022", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW19090", "name": "Praveen Jha", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "7/15/2024", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW19127", "name": "Purushottam Lal Suman", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "7/18/2024", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW5113", "name": "Ravikant Sharma", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "9/12/2022", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW9862", "name": "Rohit Kumar", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Gurukul – A – Noida – UP", "doj": "3/20/2023", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW20181", "name": "SANJEEV KUMAR", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "9/26/2024", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW12466", "name": "Shikha Sharma", "designation": "Manager", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – B – Noida – UP", "doj": "6/1/2023", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW30254", "name": "Supreet Singh", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – A – Noida – UP", "doj": "10/27/2025", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW5964", "name": "VIKAS  KUMAR", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "10/5/2022", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW7740", "name": "Vikas Agarwal", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "1/7/2023", "hod_name": "Pankaj Rastogi", "leader_name": "Rohit Kumar Gupta", "children": []}]}]}, {"id": "PW12073", "name": "Ritesh Agarwal", "designation": "HOD", "category": "", "type": "", "dept": "", "loc": "", "doj": "", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "is_hod": true, "external": true, "children": [{"id": "PW9476", "name": "Agam Agrawal", "designation": "Associate Manager", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "3/15/2023", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW25225", "name": "Ekta .", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Vidyapeeth – SCO 83 – 84 – Chandigarh – PB", "doj": "4/14/2025", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW20874", "name": "Sanjay Kumar Mishra", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "11/8/2024", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW20875", "name": "Anand Singh Thakur", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "11/8/2024", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW22745", "name": "Ashish Kumar", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "2/3/2025", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW20867", "name": "Dinesh Kumar", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "11/8/2024", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW3969", "name": "Kuldeep Singh", "designation": "Associate Manager", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "8/1/2022", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW19034", "name": "Om Dutt Sharma", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "7/11/2024", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW19602", "name": "Sreeraj raj Mohan", "designation": "Manager", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "8/20/2024", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW20868", "name": "Dheeraj Prakash", "designation": "Associate Manager", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "11/11/2024", "hod_name": "Ritesh Agarwal", "leader_name": "Rohit Kumar Gupta", "children": []}]}]}]}, {"id": "PW2006", "name": "Shivendu Mishra", "designation": "HOD", "category": "", "type": "", "dept": "", "loc": "", "doj": "", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "is_hod": true, "external": true, "children": [{"id": "PW1098", "name": "Hemant Singhal", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "10/1/2021", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW20110", "name": "Abhishek Trivedi", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "9/17/2024", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW5156", "name": "Abhay Prakash", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "9/15/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW22927", "name": "Abhishek Mishra", "designation": "Associate Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "2/10/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW3899", "name": "Dhanraj Meena", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "7/27/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW24844", "name": "Aarti Prajapati", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "4/7/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW11031", "name": "Sarjan Singh", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "4/12/2023", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW26589", "name": "Gopal Sharma", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "5/22/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW3791", "name": "Jitendra Kumar", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "7/25/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW19402", "name": "Kanchan Kumar", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "8/5/2024", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW26918", "name": "Kunal Saini", "designation": "Associate Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "6/5/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW26522", "name": "Mahendra Kumar", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "5/22/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW2886", "name": "Neeraj Suman", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "6/25/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW5472", "name": "Mahesh Kumar Jain", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "9/19/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW12089", "name": "Nazneen Shaikh", "designation": "Associate Manager", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "5/15/2023", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW27253", "name": "Pradeep Billas", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – S.A.S Nagar – Chandigarh – PB", "doj": "6/16/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW2977", "name": "Raj Sharma", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "7/1/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW26368", "name": "Sushma Kumari Sharma", "designation": "Associate Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "5/15/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW20783", "name": "VIVEK KUMAR", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "11/7/2024", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW27279", "name": "Vijay Kumar Tripathi", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "6/16/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}]}, {"id": "PW0029", "name": "Manisha Negi", "designation": "Senior Manager", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "11/1/2020", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW5423", "name": "Astha Mital", "designation": "Senior Manager", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "9/19/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW19252", "name": "Mohammad Mudassir", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "7/25/2024", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW17029", "name": "SOMANSHU VISHNOI", "designation": "Senior Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Corporate – Noida – (WFH) – UP", "doj": "4/1/2024", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW13443", "name": "Indrani Banerjee", "designation": "Associate Manager", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "8/18/2023", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW20152", "name": "Sahil Dwivedi", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Central Results", "loc": "Corporate – KLJ Noida One – Noida – UP", "doj": "9/23/2024", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW28413", "name": "Shobha Rani Rai", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "YouTube", "loc": "Corporate – Noida – (WFH) – UP", "doj": "7/31/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW1061", "name": "Rajeev Rastogi", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Maths", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "2/16/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW7114", "name": "Amit Kumar", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "12/12/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW4464", "name": "Ashutosh Gautam", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "8/1/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW22085", "name": "BAJRANG LAL AGRAWAL", "designation": "Associate Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "1/6/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW0352", "name": "Praveen Vijayvargiya", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "9/1/2021", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW5935", "name": "Rajeet Chandan", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "10/6/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW3904", "name": "Rishi Joshi", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "7/30/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW4490", "name": "Shalendra Gupta", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "8/1/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW4640", "name": "Tarun Indora", "designation": "Senior Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "8/22/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": [{"id": "PW5023", "name": "Anush Shrivastav", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "8/16/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW28316", "name": "Manjeet Kumar", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "7/24/2025", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW4132", "name": "Vikas Yadav", "designation": "Associate", "category": "Results", "type": "Non Teacher", "dept": "Academics Operations Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "7/28/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW3884", "name": "Varun Chauhan", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – A – Noida – UP", "doj": "7/28/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}, {"id": "PW3298", "name": "Vivek Bansal", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Results", "loc": "Gurukul – Subash Nagar – Kota – RJ", "doj": "7/12/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}, {"id": "PW3039", "name": "Sudarshan Vairagi", "designation": "Professor", "category": "Results", "type": "Teacher", "dept": "Academics Online AIR", "loc": "Studio – Kota – RJ", "doj": "7/4/2022", "hod_name": "Shivendu Mishra", "leader_name": "Rohit Kumar Gupta", "children": []}]}]}]};
+var filt='all', COL={};
+
+function nodeVisible(n){
+  if(n.is_leader||n.is_hod) return true;
+  if(filt==='all') return true;
+  if(filt==='AIR') return n.category==='AIR';
+  if(filt==='Results') return n.category==='Results';
+  if(filt==='Teacher') return n.type==='Teacher';
+  if(filt==='NonTeacher') return n.type==='Non Teacher';
+  return true;
+}
+function subtreeVisible(n){
+  if(nodeVisible(n)) return true;
+  return (n.children||[]).some(function(c){return subtreeVisible(c);});
+}
+function countDesc(n){
+  return (n.children||[]).filter(function(c){return subtreeVisible(c);}).reduce(function(s,c){return s+1+countDesc(c);},0);
+}
+function colorClass(n){
+  if(!n.category) return '';
+  var a=n.category==='AIR', t=n.type==='Teacher';
+  return a?(t?'air-t':'air-n'):(t?'res-t':'res-n');
+}
+
+function mk(c){var d=document.createElement('div');if(c)d.className=c;return d;}
+
+function drawHbar(kidsRow, built){
+  if(built.length<2) return;
+  requestAnimationFrame(function(){
+    if(!kidsRow.parentNode) return;
+    var rr=kidsRow.getBoundingClientRect();
+    var f=built[0].getBoundingClientRect();
+    var l=built[built.length-1].getBoundingClientRect();
+    var x1=f.left+f.width/2-rr.left;
+    var x2=l.left+l.width/2-rr.left;
+    var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.style.cssText='position:absolute;top:0;left:0;width:100%;height:2px;overflow:visible;pointer-events:none;z-index:0';
+    var ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+    ln.setAttribute('x1',x1); ln.setAttribute('y1','1');
+    ln.setAttribute('x2',x2); ln.setAttribute('y2','1');
+    ln.setAttribute('stroke','var(--conn)'); ln.setAttribute('stroke-width','2');
+    svg.appendChild(ln);
+    kidsRow.style.position='relative';
+    kidsRow.insertBefore(svg,kidsRow.firstChild);
+  });
+}
+
+function mkTree(n, depth){
+  if(!subtreeVisible(n)) return null;
+  var visKids=(n.children||[]).filter(function(c){return subtreeVisible(c);});
+  var hasKids=visKids.length>0;
+  var collapsed=COL[n.id]===true;
+  var showKids=hasKids&&!collapsed;
+
+  // Build card
+  var card;
+  if(n.is_leader){
+    card=mk('card leader');
+    card.innerHTML='<div class="lv">Leader</div>'+
+      '<div class="nm">'+n.name+'</div>'+
+      '<div class="cid">'+n.id+'</div>'+
+      '<div class="tot">'+countDesc(n)+' members</div>';
+  } else if(n.is_hod){
+    card=mk('card hod');
+    card.innerHTML='<div class="lv">HOD</div>'+
+      '<div class="nm">'+n.name+'</div>'+
+      '<div class="cid">'+n.id+'</div>'+
+      '<div class="tot">'+countDesc(n)+' members</div>';
+    if(n.category) (function(nd){nd.addEventListener('click',function(){openP(n);});})(card);
+  } else {
+    card=mk('card p '+colorClass(n));
+    card.setAttribute('data-id',n.id);
+    var catT=n.category==='AIR'?'<span class="tag t-air">AIR</span>':'<span class="tag t-res">Results</span>';
+    var typT=n.type==='Teacher'?'<span class="tag t-tea">Teacher</span>':'<span class="tag t-nt">Non-Teacher</span>';
+    card.innerHTML='<div class="nm">'+n.name+'</div>'+
+      '<div class="dg">'+n.designation+'</div>'+
+      '<div class="cid">'+n.id+'</div>'+
+      '<div class="tags">'+catT+typT+'</div>';
+    (function(nd){nd.addEventListener('click',function(ev){ev.stopPropagation();openP(n);});})(card);
+  }
+
+  // Toggle badge
+  if(hasKids){
+    var tog=mk('tog'+(collapsed?'':' open'));
+    tog.textContent=(collapsed?'▼ ':'▲ ')+visKids.length;
+    (function(id){tog.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      COL[id]=COL[id]===true?false:true;
+      build();
+    });})(n.id);
+    card.appendChild(tog);
+  }
+
+  var tree=mk('tree');
+  tree.appendChild(card);
+  if(!showKids) return tree;
+
+  var vd=mk('vdown'); vd.style.height='28px'; tree.appendChild(vd);
+
+  if(visKids.length===1){
+    var only=mkTree(visKids[0],depth+1);
+    if(only) tree.appendChild(only);
+    return tree;
+  }
+
+  var kidsRow=mk('kids');
+  var built=[];
+  visKids.forEach(function(c){
+    var ct=mkTree(c,depth+1);
+    if(!ct) return;
+    var kid=mk('kid');
+    var vs=mk('vstub'); vs.style.height='28px';
+    kid.appendChild(vs);
+    kid.appendChild(ct);
+    kidsRow.appendChild(kid);
+    built.push(kid);
+  });
+  tree.appendChild(kidsRow);
+  drawHbar(kidsRow,built);
+  return tree;
+}
+
+function build(){
+  var wrap=document.getElementById('wrap');
+  wrap.innerHTML='';
+  DATA.trees.forEach(function(t){
+    var tr=mkTree(t,0);
+    if(tr) wrap.appendChild(tr);
+  });
+}
+
+// Filters
+var fMap={all:'f-all',AIR:'f-air',Results:'f-res',Teacher:'f-tea',NonTeacher:'f-nt'};
+var cMap={all:'aa',AIR:'ab',Results:'ac',Teacher:'ad',NonTeacher:'ae'};
+function sf(f){
+  filt=f;
+  Object.keys(fMap).forEach(function(k){document.getElementById(fMap[k]).className='btn';});
+  document.getElementById(fMap[f]).className='btn '+cMap[f];
+  build();
+}
+
+function xAll(open){
+  function walk(n){COL[n.id]=!open;(n.children||[]).forEach(walk);}
+  DATA.trees.forEach(walk);
+  build();
+}
+
+// Panel
+function openP(n){
+  document.getElementById('p-id').textContent=n.id||'';
+  document.getElementById('p-nm').textContent=n.name||'';
+  document.getElementById('p-dg').textContent=n.designation||'';
+  document.getElementById('p-dp').textContent=n.dept||'';
+  document.getElementById('p-ct').textContent=n.category||'';
+  document.getElementById('p-ty').textContent=n.type||'';
+  document.getElementById('p-lc').textContent=n.loc||'';
+  document.getElementById('p-dj').textContent=n.doj||'';
+  document.getElementById('p-hd').textContent=n.hod_name||'';
+  document.getElementById('p-ld').textContent=n.leader_name||'';
+  document.getElementById('pnl').classList.add('on');
+  document.querySelectorAll('.card.hl').forEach(function(x){x.classList.remove('hl');});
+  var t=document.querySelector('[data-id="'+n.id+'"]');
+  if(t) t.classList.add('hl');
+}
+function closeP(){
+  document.getElementById('pnl').classList.remove('on');
+  document.querySelectorAll('.card.hl').forEach(function(x){x.classList.remove('hl');});
+}
+
+// Search
+var FLAT=[],seen2={},UNIQ=[];
+function flatten(n){FLAT.push(n);(n.children||[]).forEach(flatten);}
+DATA.trees.forEach(flatten);
+FLAT.forEach(function(p){if(p.category&&!seen2[p.id]){seen2[p.id]=true;UNIQ.push(p);}});
+
+var si=document.getElementById('srch'), dr2=document.getElementById('dr');
+si.addEventListener('input',function(){
+  var q=this.value.trim().toLowerCase();
+  if(!q){dr2.classList.remove('on');return;}
+  var hits=UNIQ.filter(function(p){return p.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q);}).slice(0,8);
+  if(!hits.length){dr2.classList.remove('on');return;}
+  dr2.innerHTML=hits.map(function(p){return '<div class="di" data-id="'+p.id+'"><strong>'+p.name+'</strong><span>'+p.id+' · '+p.designation+'</span></div>';}).join('');
+  dr2.classList.add('on');
+  dr2.querySelectorAll('.di').forEach(function(el){
+    el.addEventListener('click',function(){
+      si.value='';dr2.classList.remove('on');
+      var id=this.getAttribute('data-id');
+      var found=UNIQ.find(function(p){return p.id===id;});
+      if(!found)return;
+      function expandPath(n){
+        if(n.id===id){COL[n.id]=false;return true;}
+        if((n.children||[]).some(function(c){return expandPath(c);})){COL[n.id]=false;return true;}
+        return false;
+      }
+      DATA.trees.forEach(expandPath);
+      filt='all';
+      Object.keys(fMap).forEach(function(k){document.getElementById(fMap[k]).className='btn';});
+      document.getElementById('f-all').className='btn aa';
+      build();
+      setTimeout(function(){
+        var t2=document.querySelector('[data-id="'+id+'"]');
+        if(t2){t2.scrollIntoView({behavior:'smooth',block:'center'});openP(found);}
+      },120);
+    });
+  });
+});
+document.addEventListener('click',function(ev){if(!ev.target.closest('.sb'))dr2.classList.remove('on');});
+
+// Pan
+var cv2=document.getElementById('cv');
+var pan=false,px,py,sl,st;
+cv2.addEventListener('mousedown',function(ev){
+  if(ev.target.closest('.card,.btn,.sb,.tog,.pnl'))return;
+  pan=true;px=ev.pageX;py=ev.pageY;sl=cv2.scrollLeft;st=cv2.scrollTop;cv2.classList.add('pan');
+});
+document.addEventListener('mousemove',function(ev){if(!pan)return;cv2.scrollLeft=sl-(ev.pageX-px);cv2.scrollTop=st-(ev.pageY-py);});
+document.addEventListener('mouseup',function(){pan=false;cv2.classList.remove('pan');});
+
+// Stats
+document.getElementById('c-air').textContent=UNIQ.filter(function(p){return p.category==='AIR';}).length;
+document.getElementById('c-res').textContent=UNIQ.filter(function(p){return p.category==='Results';}).length;
+document.getElementById('c-tea').textContent=UNIQ.filter(function(p){return p.type==='Teacher';}).length;
+document.getElementById('c-nt').textContent=UNIQ.filter(function(p){return p.type==='Non Teacher';}).length;
+document.getElementById('c-tot').textContent=UNIQ.length;
+
+build();
+</script>
+</body>
+</html>
